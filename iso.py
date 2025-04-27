@@ -225,6 +225,8 @@ def main():
         if cmap in met_palettes:
             colors = met_brew(cmap)
             cmap_object = ListedColormap(colors)
+        else:
+            cmap_object = cmap
 
         # Generate our seeds for our shape we are going to draw. These determine whether we will draw lines at even or odd coordinates.
         x_1_seed = rng.binomial(1, x_1_dist, args.x)
