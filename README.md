@@ -33,7 +33,7 @@ Ideally, the total amount of pixels in the patterns is a multiple of the number 
 Padding is added with the `--padding` argument. A hitomezashi pattern with a width and height of 10 inches (=1000 pixels) and a padding value of 0.02 (=2%) will have 20 pixels of padding added to the figure in the y and x dimensions, resulting in a final figure of 1021x1021 (1 pixel is always added to draw the border around the hitomezashi pattern).
 
 ### Arguments
-    -n                       Generate n numbers to hitomezashi patterns. (default: 1)
+    -n                       Generate n numbers of hitomezashi patterns. (default: 1)
     -x                       The number of squares (width/height) in the hitomezashi grid. (default: 100)
     -c                       Colormap to draw colors from. (default: all)
     -o                       Relative path to save the images to. (default: square/)
@@ -49,7 +49,7 @@ Padding is added with the `--padding` argument. A hitomezashi pattern with a wid
 The isometric images are generated at twice (as specified by the `-downscale` argument) their specified size, downsampled down to the specified size, and then saved. This is done to make the diagonal lines prettier. However, this also increases computation time (for the flood fill function specifically).
 
 ### Arguments
-    -n                       Generate n numbers to hitomezashi patterns. (default: 1)
+    -n                       Generate n numbers of hitomezashi patterns. (default: 1)
     -x                       The number of triangles (width/height) in the hitomezashi grid. (default: 100)
     -c                       Colormap to draw colors from. (default: all)
     -o                       Relative path to save the images to. (default: iso/)
@@ -68,7 +68,7 @@ The number of inner circles and radial lines in the polar grid are specified by 
 Like the isometric images, the polar images are also downscaled.
 
 ### Arguments
-    -n                       Generate n numbers to hitomezashi patterns. (default: 1)
+    -n                       Generate n numbers of hitomezashi patterns. (default: 1)
     -x1                      The number of circles in the hitomezashi grid. (default: 50)
     -x2                      The number of radials in the hitomezashi grid. Best to use an odd number. (default: 99)
     -c                       Colormap to draw colors from. (default: all)
