@@ -3,6 +3,7 @@ iso/
 polar/
 square/
 .vscode/
+analysis/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

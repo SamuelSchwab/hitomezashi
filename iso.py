@@ -115,7 +115,7 @@ def fill(cmap: str,
     
     # We will flood fill all white areas.
     # Get indices of pixels we need to color.
-    ind = np.where(img_grey == 1)
+    ind = np.where(img_grey > 0.5)
 
     # Make background transparent if requested
     if background == "transparent":
@@ -126,7 +126,7 @@ def fill(cmap: str,
         for item in mask:
             img_grey[item] = 0
             img[item] = (0,0,0,0)
-            ind = np.where(img_grey == 1)
+            ind = np.where(img_grey > 0.5)
 
     # Each loop colors one patch
     while len(ind[0]) > 0:
@@ -134,7 +134,7 @@ def fill(cmap: str,
         color = my_cmap(rng.random(), bytes=True)[:4]
         img[mask] = color
         img_grey[mask] = 0
-        ind = np.where(img_grey == 1)
+        ind = np.where(img_grey > 0.5)
 
     # Downscale the image
     if downscale != 1:

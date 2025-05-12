@@ -16,6 +16,7 @@ def draw(
         output_path: str,
         width: float,
         height: float,
+        borderless: bool,
         padding: float,
         dpi: int
         ):
@@ -42,7 +43,7 @@ def draw(
     ratio = (width * dpi) / (width * dpi * (1 + padding) + one_pixel)
     width_padding = round(ratio * padding * (width * dpi * (1 + padding)) + 1) # in pixels
     height_padding = round(ratio * padding * (height * dpi * (1 + padding)) + 1) # in pixels
-    ax1 = fig1.add_axes([(ratio * padding / 2),(ratio * padding / 2),(1 - (width_padding / round(fig_width * dpi))),(1 - (height_padding / round(fig_height * dpi)))], frameon=True)
+    ax1 = fig1.add_axes([(ratio * padding / 2),(ratio * padding / 2),(1 - (width_padding / round(fig_width * dpi))),(1 - (height_padding / round(fig_height * dpi)))], frameon=not borderless)
     fig1.patch.set_visible(True)
     fig1.patch.set_facecolor('white')
 
@@ -64,7 +65,7 @@ def draw(
     # Generate horizontal lines
     for i in range(0,len(x_seed)):
         seed = x_seed[i]
-        for j in range(0,len(y_seed), 2):
+        for j in range(0,len(y_seed)-1, 2):
             y1 = i
             y2 = i
             x1 = j + seed
@@ -74,7 +75,7 @@ def draw(
     # Generate vertical lines
     for i in range(0,len(y_seed)):
         seed = y_seed[i]
-        for j in range(0,len(x_seed), 2):
+        for j in range(0,len(x_seed)-1, 2):
             y1 = j + seed
             y2 = j + 1 + seed
             x1 = i
@@ -90,12 +91,17 @@ def draw(
                         )
     ax1.add_collection(ln_coll)
 
-    plt.xlim((0,len(x_seed)))
-    plt.ylim((0,len(y_seed)))
+    if borderless:
+        plt.xlim((-1,len(x_seed)))
+        plt.ylim((-1,len(y_seed)))
+    else:
+        plt.xlim((0,len(x_seed)-1))
+        plt.ylim((0,len(y_seed)-1))
 
     plt.savefig(output_path + "/" + str(random_seed) + ".png", dpi = dpi)
 
 def fill(cmap: str,
+        background: str,
         rng: any,
         random_seed: int,
         pattern_path: str,
@@ -105,23 +111,36 @@ def fill(cmap: str,
     my_cmap = plt.get_cmap(cmap)
 
     # Load generated image
-    img = imread(pattern_path + "/" + str(random_seed) + ".png")[:,:,:3]
-    # We use the grayscale image for our flood function to find patches we need to color
-    img_grey = rgb2gray(img)
+    img = imread(pattern_path + "/" + str(random_seed) + ".png")
+
+    # We use the grayscale image for our flood function to find patches we need to color. Grayscale color scale is from 0 (black) to 1 (white).
+    img_grey = rgb2gray(img[:,:,:3])
     
-    # Get indices of pixels we need to color
-    ind = np.where(img_grey == 1)
+    # We will flood fill all white areas.
+    # Get indices of pixels we need to color.
+    ind = np.where(img_grey > 0.5)
+
+    # Make background white if requested
+    if background == "white":
+        mask = []
+        mask.append(flood(img_grey,(ind[0][0],ind[0][0]),tolerance=0.5))
+
+        for item in mask:
+            img_grey[item] = 0
+            img[item] = (255,255,255,255)
+            ind = np.where(img_grey > 0.5)
 
     # Each loop colors one patch
     while len(ind[0]) > 0:
         mask = flood(img_grey,(ind[0][0],ind[1][0]),tolerance=0.5)
-        color = my_cmap(rng.random(), bytes=True)[:3]
+        color = my_cmap(rng.random(), bytes=True)[:4]
         img[mask] = color
         img_grey[mask] = 0
-        ind = np.where(img_grey == 1)
+        ind = np.where(img_grey > 0.5)
 
     # Save image
     imsave(output_path + "/" + str(random_seed) + ".png", img)
+
 
 def parse_args():
     parser=argparse.ArgumentParser(
@@ -135,7 +154,9 @@ def parse_args():
     parser.add_argument("-s", type=int, default=0, help="Seed Number. 0 will create a psuedorandom seed number.")
     parser.add_argument("--width", type=float, default=10, help="Figure width in inches.")
     parser.add_argument("--height", type=float, default=10, help="Figure height in inches.")
+    parser.add_argument("--borderless", action='store_true', help="Remove the border around the pattern.")
     parser.add_argument("--padding", type=float, default=0.04, help="Percentage of the figure height/width which is added as padding.")
+    parser.add_argument("--background", type=str, default="transparent", help="'white' or 'colored' background.")
     args=parser.parse_args()
     return args
 
@@ -206,18 +227,18 @@ def main():
             cmap_object = cmap
 
         # Generate our seeds for our shape we are going to draw. These determine whether we will draw lines at even or odd coordinates.
-        x_seed = rng.binomial(1, x_dist, args.x)
-        y_seed = rng.binomial(1, y_dist, args.x)
+        x_seed = rng.binomial(1, x_dist, args.x+1)
+        y_seed = rng.binomial(1, y_dist, args.x+1)
 
         # Draw shape and fill
         # Output directory is the user specified relative path + the pattern or colored folder + the number of squares in the grid + the name of the colormap + the seeds number
         pattern_path = args.o + "/patterns/" + str(args.x) + "/" + cmap + "/"
         makedirs(pattern_path, exist_ok=True)
-        draw(x_seed, y_seed, seed_seq.entropy, pattern_path, args.width, args.height, args.padding, 100)
+        draw(x_seed, y_seed, seed_seq.entropy, pattern_path, args.width, args.height, args.borderless, args.padding, 100)
 
         colored_path = args.o + "/colored/" + str(args.x) + "/" + cmap + "/"
         makedirs(colored_path, exist_ok=True)
-        fill(cmap_object, rng, seed_seq.entropy, pattern_path, colored_path)
+        fill(cmap_object, args.background, rng, seed_seq.entropy, pattern_path, colored_path)
 
         plt.close()
 
